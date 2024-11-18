@@ -19,6 +19,8 @@ num_plates = 3;  // [1:10] // Customize min and max as needed
 
 /*[Hole Configuration]*/
 hole_diameter = 26.3;     // [1.0:1.0:100.0] Diameter of holes
+hole_tolerance = 0.2;     // [0.0:0.05:1.0] Tolerance for hole diameters
+adj_hole_diameter = hole_diameter + hole_tolerance; // Adjusted hole diameter
 num_holes_x = 0;        // Number of holes in X direction (0 for auto-calculate)
 num_holes_y = 0;        // Number of holes in Y direction (0 for auto-calculate)
 hole_spacing = 9.8;       // Spacing between holes in mm (only when hole count is specified)
@@ -133,14 +135,14 @@ function calc_hole_layout() =
         avail_depth = rack_depth - 2*front_margin,
 
         // Calculate holes and spacing based on input parameters
-        cols = (num_holes_x > 0) ? num_holes_x : floor((avail_width + hole_spacing) / (hole_diameter + hole_spacing)),
-        rows = (num_holes_y > 0) ? num_holes_y : floor((avail_depth + hole_spacing) / (hole_diameter + hole_spacing)),
+        cols = (num_holes_x > 0) ? num_holes_x : floor((avail_width + hole_spacing) / (adj_hole_diameter + hole_spacing)),
+        rows = (num_holes_y > 0) ? num_holes_y : floor((avail_depth + hole_spacing) / (adj_hole_diameter + hole_spacing)),
 
         // Calculate actual spacing
         spacing_x = (num_holes_x > 0 && hole_spacing > 0) ? hole_spacing :
-                   (cols <= 1) ? 0 : (avail_width - cols * hole_diameter) / (cols - 1),
+                   (cols <= 1) ? 0 : (avail_width - cols * adj_hole_diameter) / (cols - 1),
         spacing_y = (num_holes_y > 0 && hole_spacing > 0) ? hole_spacing :
-                   (rows <= 1) ? 0 : (avail_depth - rows * hole_diameter) / (rows - 1)
+                   (rows <= 1) ? 0 : (avail_depth - rows * adj_hole_diameter) / (rows - 1)
     )
     [cols, rows, spacing_x, spacing_y];
 
@@ -200,34 +202,34 @@ module create_hole_shape(size, height, x_index=0, y_index=0) {
 
 // Modified tube_holes module to ensure indices are numbers
 module tube_holes() {
-    translate([-rack_width/2 + side_margin + hole_diameter/2, 
-              -rack_depth/2 + front_margin + hole_diameter/2, 
+    translate([-rack_width/2 + side_margin + adj_hole_diameter/2, 
+              -rack_depth/2 + front_margin + adj_hole_diameter/2, 
               0])
     for(x = [0:1:cols-1]) {  // Added step value of 1 to ensure numeric
         for(y = [0:1:rows-1]) {  // Added step value of 1 to ensure numeric
-            translate([x*(hole_diameter + hole_spacing_x), 
-                      y*(hole_diameter + hole_spacing_y), 
+            translate([x*(adj_hole_diameter + hole_spacing_x), 
+                      y*(adj_hole_diameter + hole_spacing_y), 
                       0])
-            create_hole_shape(hole_diameter, section_height*3, x, y);
+            create_hole_shape(adj_hole_diameter, section_height*3, x, y);
         }
     }
 }
 
 // Modified bottom_dimples module to ensure indices are numbers
 module bottom_dimples() {
-    translate([-rack_width/2 + side_margin + hole_diameter/2, 
-              -rack_depth/2 + front_margin + hole_diameter/2, 
+    translate([-rack_width/2 + side_margin + adj_hole_diameter/2, 
+              -rack_depth/2 + front_margin + adj_hole_diameter/2, 
               section_height - bottom_depth])
     for(x = [0:1:cols-1]) {  // Added step value of 1 to ensure numeric
         for(y = [0:1:rows-1]) {  // Added step value of 1 to ensure numeric
-            translate([x*(hole_diameter + hole_spacing_x), 
-                      y*(hole_diameter + hole_spacing_y), 
+            translate([x*(adj_hole_diameter + hole_spacing_x), 
+                      y*(adj_hole_diameter + hole_spacing_y), 
                       0]) {
                 if (hole_shape == "circle") {
-                    cylinder(h=bottom_depth, d1=hole_diameter, d2=hole_diameter*0.9);
+                    cylinder(h=bottom_depth, d1=adj_hole_diameter, d2=adj_hole_diameter*0.9);
                 } else {
-                    scale([1, 1, bottom_depth/(hole_diameter/2)])
-                        create_hole_shape(hole_diameter, hole_diameter/2, x, y);
+                    scale([1, 1, bottom_depth/(adj_hole_diameter/2)])
+                        create_hole_shape(adj_hole_diameter, adj_hole_diameter/2, x, y);
                 }
             }
         }
@@ -301,16 +303,16 @@ function get_hole_number(x, y, total_x, total_y) =
 
 // Modified numbered_tube_holes module to include alternating pattern
 module numbered_tube_holes() {
-    translate([-rack_width/2 + side_margin + hole_diameter/2, 
-              -rack_depth/2 + front_margin + hole_diameter/2, 
+    translate([-rack_width/2 + side_margin + adj_hole_diameter/2, 
+              -rack_depth/2 + front_margin + adj_hole_diameter/2, 
               0]) {
         for(x = [0:1:cols-1]) {
             for(y = [0:1:rows-1]) {
-                translate([x*(hole_diameter + hole_spacing_x), 
-                          y*(hole_diameter + hole_spacing_y), 
+                translate([x*(adj_hole_diameter + hole_spacing_x), 
+                          y*(adj_hole_diameter + hole_spacing_y), 
                           0]) {
                     // Main hole with custom shape and alternating pattern
-                    create_hole_shape(hole_diameter, section_height*3, x, y);
+                    create_hole_shape(adj_hole_diameter, section_height*3, x, y);
                     
                     // Number indent
                     if (enable_numbers) {
@@ -318,7 +320,7 @@ module numbered_tube_holes() {
                         number_width = len(str(hole_number)) * 4 * number_scale;
                         
                         translate([0, 
-                                 -hole_diameter/2 - number_spacing - number_width/2, 
+                                 -adj_hole_diameter/2 - number_spacing - number_width/2, 
                                  section_height/2 - number_depth + number_vertical_offset])
                             rotate([0, 0, number_rotation])
                                 scale([number_scale, number_scale, 1])
@@ -489,16 +491,16 @@ module number_inlay(number) {
 
 // Module to create all number inlays
 module number_inlays() {
-    translate([-rack_width/2 + side_margin + hole_diameter/2, 
-              -rack_depth/2 + front_margin + hole_diameter/2, 
+    translate([-rack_width/2 + side_margin + adj_hole_diameter/2, 
+              -rack_depth/2 + front_margin + adj_hole_diameter/2, 
               0]) {
         for(x = [0:cols-1]) {
             for(y = [0:rows-1]) {
                 hole_number = get_hole_number(x, y, cols, rows);
                 number_width = len(str(hole_number)) * 4 * number_scale;
                 
-                translate([x*(hole_diameter + hole_spacing_x), 
-                         y*(hole_diameter + hole_spacing_y) - hole_diameter/2 - number_spacing - number_width/2, 
+                translate([x*(adj_hole_diameter + hole_spacing_x), 
+                         y*(adj_hole_diameter + hole_spacing_y) - adj_hole_diameter/2 - number_spacing - number_width/2, 
                          section_height/2 - number_depth + number_vertical_offset])
                     rotate([0, 0, number_rotation])
                         number_inlay(hole_number);
