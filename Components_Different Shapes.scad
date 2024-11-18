@@ -9,16 +9,16 @@ section_height = 9.4;
 
 /*[Back Support Configuration]*/
 // Amount of back support to keep (how much of the back to preserve)
-back_support_depth = 30;  // [10:1:100] Amount of back material to keep
+back_support_depth = 10;  // [10:1:100] Amount of back material to keep
 // Enable/disable back support
-enable_back_support = false;  // [true,false]
+enable_back_support = true;  // [true,false]
 
 /*[Plate Configuration]*/
 // Number of plates (minimum 1)
 num_plates = 3;  // [1:10] // Customize min and max as needed
 
 /*[Hole Configuration]*/
-hole_diameter = 26.3;     // [1.0:1.0:100.0] Diameter of holes
+hole_diameter = 26.3;     // [1.0:1.1:100.0] Diameter of holes
 hole_tolerance = 0.2;     // [0.0:0.05:1.0] Tolerance for hole diameters
 adj_hole_diameter = hole_diameter + hole_tolerance; // Adjusted hole diameter
 num_holes_x = 0;        // Number of holes in X direction (0 for auto-calculate)
@@ -42,16 +42,14 @@ enable_numbers = true;  // [true,false]
 number_direction = "left_to_right"; // [left_to_right,right_to_left,front_to_back,back_to_front]
 // Enable middle dot markers
 enable_center_dots = true;  // [true,false]
-// Depth of number indents
+// Depth of number indents (also controls vertical position)
 number_depth = 3;  // [0.5:0.1:4]
 // Scale of numbers
 number_scale = 1;  // [0.5:0.1:3]
 // Rotation of numbers (degrees)
 number_rotation = 0;  // [-180:5:180]
-// Number spacing from hole edge
-number_spacing = 3;  // [2:0.5:10]
-// Vertical offset for numbers to prevent cutoff
-number_vertical_offset = 1;  // [0:0.5:5]
+// Distance of numbers from hole edge (mm)
+number_spacing = 7;  // [0:0.5:10]
 
 /*[Dovetail Configuration]*/
 dovetail_width = 15;
@@ -59,7 +57,7 @@ dovetail_height = 4;
 dovetail_back_width = 18;
 support_thickness = 14.3;
 // New tolerance parameter
-dovetail_tolerance = 0.3; // [0.0:0.05:1.0] Tolerance for dovetail joints
+dovetail_tolerance = 0.2; // [0.0:0.05:1.0] Tolerance for dovetail joints
 
 /*[Handle Configuration]*/
 handle_width = support_thickness;  // Match support thickness
@@ -82,7 +80,7 @@ bottom_depth = 7;
 
 /*[Inlay Configuration]*/
 // Tolerance for the inlay fit
-inlay_tolerance = 0.2;  // [0.0:0.05:1.0] Tolerance for number inlays
+inlay_tolerance = -0.15;  // [0.0:0.05:1.0] Tolerance for number inlays
 // Height offset to ensure good adhesion
 height_offset = 0.2;    // [0.0:0.1:1.0] Extra height for better adhesion
 
@@ -314,14 +312,16 @@ module numbered_tube_holes() {
                     // Main hole with custom shape and alternating pattern
                     create_hole_shape(adj_hole_diameter, section_height*3, x, y);
                     
-                    // Number indent
+                    // Number indent with adjustable position using number_spacing
                     if (enable_numbers) {
                         hole_number = get_hole_number(x, y, cols, rows);
                         number_width = len(str(hole_number)) * 4 * number_scale;
                         
+                        // Position numbers based on number_spacing
+                        // Positive spacing moves numbers away from hole center
                         translate([0, 
-                                 -adj_hole_diameter/2 - number_spacing - number_width/2, 
-                                 section_height/2 - number_depth + number_vertical_offset])
+                                 -(adj_hole_diameter/2 + number_spacing), 
+                                 section_height/2 - number_depth])
                             rotate([0, 0, number_rotation])
                                 scale([number_scale, number_scale, 1])
                                     linear_extrude(number_depth + 0.01)
@@ -500,8 +500,8 @@ module number_inlays() {
                 number_width = len(str(hole_number)) * 4 * number_scale;
                 
                 translate([x*(adj_hole_diameter + hole_spacing_x), 
-                         y*(adj_hole_diameter + hole_spacing_y) - adj_hole_diameter/2 - number_spacing - number_width/2, 
-                         section_height/2 - number_depth + number_vertical_offset])
+                         y*(adj_hole_diameter + hole_spacing_y) - (adj_hole_diameter/2 + number_spacing),
+                         section_height/2 - number_depth])
                     rotate([0, 0, number_rotation])
                         number_inlay(hole_number);
             }
