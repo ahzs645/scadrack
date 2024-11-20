@@ -84,21 +84,22 @@ inlay_tolerance = -0.15;  // [0.0:0.05:1.0] Tolerance for number inlays
 // Height offset to ensure good adhesion
 height_offset = 0.2;    // [0.0:0.1:1.0] Extra height for better adhesion
 
-/*[Component Selection]*/
-// Combo box to select which component to render
-component_selection = "assembly"; // [assembly:Assembly, bottom_rack:Bottom Rack, combined_rack:Combined Rack, vertical_support:Vertical Support, number_inlays:Number Inlays]
+// Update the component selection options
+component_selection = "assembly"; // [assembly:Assembly, bottom_rack:Bottom Rack, combined_rack:Combined Rack, vertical_support_left:Left Vertical Support, vertical_support_right:Right Vertical Support, number_inlays:Number Inlays]
 
-/* Function, module, and layout definitions remain the same until the main rendering switch */
+/* [Previous code remains unchanged until the main rendering switch] */
 
-/* Main rendering switch based on selected component */
+/* Modified main rendering switch */
 if (component_selection == "assembly") {
     assembly();
 } else if (component_selection == "bottom_rack") {
     bottom_rack();
 } else if (component_selection == "combined_rack") {
     combined_rack();
-} else if (component_selection == "vertical_support") {
+} else if (component_selection == "vertical_support_left") {
     vertical_support();
+} else if (component_selection == "vertical_support_right") {
+    mirror([1,0,0]) vertical_support();
 } else if (component_selection == "number_inlays") {
     number_inlays();
 }
@@ -245,17 +246,17 @@ module bottom_rack() {
                     attach(LEFT)
                         dovetail("male", 
                                 slide=rack_depth - back_support_depth, 
-                                width=male_dovetail_width, 
+                                width=male_dovetail_width,      // Original order maintained
                                 height=male_dovetail_height, 
-                                back_width=male_dovetail_back_width, 
+                                back_width=male_dovetail_back_width,  // Original order maintained
                                 spin=90);
             } else {
                 attach(LEFT)
                     dovetail("male", 
                             slide=rack_depth, 
-                            width=male_dovetail_width, 
+                            width=male_dovetail_width,      // Original order maintained
                             height=male_dovetail_height, 
-                            back_width=male_dovetail_back_width, 
+                            back_width=male_dovetail_back_width,  // Original order maintained
                             spin=90);
             }
 
@@ -265,17 +266,17 @@ module bottom_rack() {
                     attach(RIGHT)
                         dovetail("male", 
                                 slide=rack_depth - back_support_depth, 
-                                width=male_dovetail_width, 
+                                width=male_dovetail_back_width,  // Swapped width and back_width
                                 height=male_dovetail_height, 
-                                back_width=male_dovetail_back_width, 
+                                back_width=male_dovetail_width,  // Swapped width and back_width
                                 spin=90);
             } else {
                 attach(RIGHT)
                     dovetail("male", 
                             slide=rack_depth, 
-                            width=male_dovetail_width, 
+                            width=male_dovetail_back_width,  // Swapped width and back_width
                             height=male_dovetail_height, 
-                            back_width=male_dovetail_back_width, 
+                            back_width=male_dovetail_width,  // Swapped width and back_width
                             spin=90);
             }
         }
@@ -353,17 +354,17 @@ module combined_rack() {
                     attach(LEFT)
                         dovetail("male", 
                                 slide=rack_depth - back_support_depth, 
-                                width=male_dovetail_width, 
+                                width=male_dovetail_width,      // Original order maintained
                                 height=male_dovetail_height, 
-                                back_width=male_dovetail_back_width, 
+                                back_width=male_dovetail_back_width,  // Original order maintained
                                 spin=90);
             } else {
                 attach(LEFT)
                     dovetail("male", 
                             slide=rack_depth, 
-                            width=male_dovetail_width, 
+                            width=male_dovetail_width,      // Original order maintained
                             height=male_dovetail_height, 
-                            back_width=male_dovetail_back_width, 
+                            back_width=male_dovetail_back_width,  // Original order maintained
                             spin=90);
             }
 
@@ -373,17 +374,17 @@ module combined_rack() {
                     attach(RIGHT)
                         dovetail("male", 
                                 slide=rack_depth - back_support_depth, 
-                                width=male_dovetail_width, 
+                                width=male_dovetail_back_width,  // Swapped width and back_width
                                 height=male_dovetail_height, 
-                                back_width=male_dovetail_back_width, 
+                                back_width=male_dovetail_width,  // Swapped width and back_width
                                 spin=90);
             } else {
                 attach(RIGHT)
                     dovetail("male", 
                             slide=rack_depth, 
-                            width=male_dovetail_width, 
+                            width=male_dovetail_back_width,  // Swapped width and back_width
                             height=male_dovetail_height, 
-                            back_width=male_dovetail_back_width, 
+                            back_width=male_dovetail_width,  // Swapped width and back_width
                             spin=90);
             }
         }
